@@ -1,0 +1,20 @@
+NAME: Kevin Zhang
+EMAIL: kevin.zhang.13499@gmail.com
+ID: 104939334
+SLIPDAYS: 0
+
+
+Included files in tarball
+lab1a.c: source code for the project that creates a character-at-a-time, no-echo mode terminal interface.
+Makefile: continas make default, dist, and clean
+README: continas all the information in this file
+
+Research Links:
+
+Linux Man Pages for various functions listed in the Project Description
+http://pubs.opengroup.org/onlinepubs/009695399/functions/poll.html
+https://www.gnu.org/software/libc/manual/html_node/Process-Completion-Status.html
+https://www.systutorials.com/docs/linux/man/3-execvp/
+https://www.geeksforgeeks.org/c-program-demonstrate-fork-and-pipe/
+https://www.cs.rutgers.edu/~pxk/416/notes/c-tutorials/pipe.html
+https://www.systutorials.com/docs/linux/man/2-waitpid/

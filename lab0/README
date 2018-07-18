@@ -1,0 +1,31 @@
+NAME: Kevin Zhang
+EMAIL: kevin.zhang.13499@gmail.com
+ID: 104939334
+SLIPDAYS: 0
+
+Included files in tarball:
+lab0.c: source code for the project
+Makefile: contains make check, default, dist, and clean 
+README: readme file with all information in this file
+test.sh: Script that runs the smoke tests.
+backtrace.png and breakpoint.png: required photos of gdb stacktrace and breakpoint information
+
+Smoke Test Cases
+
+1a) Testing the reading and writing from and to file respectively works without error
+1b) Confirm that the input file and output file are identical.
+2)  Confirm that the program catches invalid arguments
+3)  Confirm that the program catches invalid files names.
+4)  Confirm that the program catches errors where we cannot write to file.
+5) 	Confrim that the program catches errors where we cannot read from file.
+6)  Confirm that the program catches the segmentation fault correctly.
+
+Research Citations
+
+https://www.gnu.org/software/libc/manual/html_node/Getopt-Long-Option-Example.html#Getopt-Long-Option-Example
+https://www.gnu.org/software/libc/manual/html_node/Getopt-Long-Options.html#Getopt-Long-Options
+https://linux.die.net/man/3/creat
+Linux manual for functions                                     
+https://www.student.cs.uwaterloo.ca/~cs136/seashell/docs/seashell-error-codes.html
+
+
