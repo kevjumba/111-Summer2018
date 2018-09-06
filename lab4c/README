@@ -1,0 +1,25 @@
+NAME: Kevin Zhang
+EMAIL: kevin.zhang.13499@gmail.com
+ID: 104939334
+SLIPDAYS: 0
+
+README: contains all of the information in this file
+Makefile: make contains dist, default, clean, check, dist 
+lab4c_tcp.c: C source code for program that polls for the temperature from a Grove Cape that
+is connected to a button and a temperature sensor. Establish TCP connection with class server and
+wait for requests from the server. Periodically receives commands from server and 
+periodically provides time and temperature information that is written back to the server.
+lab4c_tsl.c: C source code for program that polls for the temperature from a Grove Cape that
+is connected to a button and a temperature sensor. Establish TSL connection with class server and
+wait for requests from the server. Periodically receives commands from server and
+periodically provides time and temperature information that is written back to the server, all encrypted
+using SSL standard.
+
+
+
+References:
+https://www.openssl.org/docs/manmaster/man7/ssl.html
+http://wiki.seeedstudio.com/Grove-Temperature_Sensor_V1.2/
+https://iotdk.intel.com/docs/master/mraa/
+http://man7.org/linux/man-pages/man2/poll.2.html
+https://drive.google.com/drive/folders/0B6dyEb8VXZo-N3hVcVI0UFpWSVk

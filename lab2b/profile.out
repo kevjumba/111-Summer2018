@@ -1,0 +1,281 @@
+Total: 1177 samples
+     997  84.7%  84.7%     1177 100.0% list_update
+     145  12.3%  97.0%      145  12.3% __strcmp_sse42
+      20   1.7%  98.7%       91   7.7% SortedList_insert
+      12   1.0%  99.7%       88   7.5% SortedList_lookup
+       2   0.2%  99.9%        2   0.2% _init
+       1   0.1% 100.0%        1   0.1% __GI___clock_gettime
+       0   0.0% 100.0%     1177 100.0% __clone
+       0   0.0% 100.0%     1177 100.0% start_thread
+ROUTINE ====================== list_update in /u/cs/ugrad/zhangk/111/lab2b/lab2_list.c
+   997   1177 Total samples (flat / cumulative)
+     .      .   82: 	lists[i].key = NULL; //circular                                                                                                                                                                                                       
+     .      .   83: 	//creates and initializes (with random keys) the required number (threads x iterations) of list elements     
+     .      .   84:   }
+     .      .   85: }
+     .      .   86: 
+---
+     .      .   87: void * list_update(void * threadId){
+     .      .   88: 
+     .      .   89:   int i;
+     .      .   90:   
+     .      .   91:   struct timespec start;
+     .      .   92:   struct timespec end;
+     .      .   93:   //  printf("%d %d", numThreads, numIterations);
+     .      .   94: 
+     .      .   95:   //printf("I'm executing list update\n");
+     .      .   96:   //threadId must be void * to fulfill pthread argument requirements
+     .      .   97:   for (i = (*(int *) threadId); i < numThreads*numIterations; i += numThreads){
+     .      .   98: 	int index = hash(elements[i].key);
+     .      .   99:     switch (lock){
+     .      .  100:     case 'n':
+     .      .  101:       SortedList_insert(&lists[index], &elements[i]);
+     .      .  102:       break;
+     .      .  103:     case 'm':
+     .      .  104: 	  if (clock_gettime(CLOCK_MONOTONIC, &start) == -1){
+     .      .  105: 		fprintf(stderr, "ERROR: Cannot acquire clock time. \n");
+     .      .  106: 		exit(1);
+     .      .  107: 	  }
+     .      .  108:       pthread_mutex_lock(&mutex_arr[index]);
+     .      .  109:       if (clock_gettime(CLOCK_MONOTONIC, &end) == -1){
+     .      .  110: 		fprintf(stderr, "ERROR: Cannot acquired clock time. \n");
+     .      .  111: 		exit(1);
+     .      .  112: 	  }
+     .      .  113: 	  timeSums[(*(int *) threadId)] += (end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec);
+     .      .  114: 	  SortedList_insert(&lists[index], &elements[i]);
+     .      .  115:       pthread_mutex_unlock(&mutex_arr[index]);
+     .      .  116:       break;
+     .      .  117:     case 's':
+     .      .  118:       if (clock_gettime(CLOCK_MONOTONIC, &start) == -1){
+     .      .  119:         fprintf(stderr, "ERROR: Cannot acquire clock time. \n");
+     .      .  120:         exit(1);
+     .      .  121:       }
+   513    513  122:       while (__sync_lock_test_and_set(&spin_flags[index], 1));
+     .      .  123: 	  if (clock_gettime(CLOCK_MONOTONIC, &end) == -1){
+     .      .  124:         fprintf(stderr, "ERROR: Cannot acquired clock time. \n");
+     .      .  125:         exit(1);
+     .      .  126:       }
+     .      .  127:       timeSums[(*(int *) threadId)] += (end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec);
+     .     91  128: 	  SortedList_insert(&lists[index], &elements[i]);
+     .      .  129:       __sync_lock_release(&spin_flags[index]);
+     .      .  130:       break;
+     .      .  131:     default:
+     .      .  132:       fprintf(stderr, "ERROR: Invalid Lock. \n");
+     .      .  133:       exit(1);
+     .      .  134:     }
+     .      .  135:   }
+     .      .  136:   /*  
+     .      .  137:   SortedListElement_t * node = linked_list->next;
+     .      .  138:   while(node != linked_list){
+     .      .  139:     printf("%s\n", node->key);
+     .      .  140:     node =node->next;
+     .      .  141:     }*/
+     .      .  142:   SortedListElement_t * t;
+     .      .  143:   for(i = *(int *) threadId; i < numThreads*numIterations; i+=numThreads){
+     .      .  144:     int index = hash(elements[i].key);
+     .      .  145:     switch (lock){
+     .      .  146:     case 'n':
+     .      .  147:       t = SortedList_lookup(&lists[index], elements[i].key);
+     .      .  148:       if(t){
+     .      .  149: 		//	printf("i'm deleting\n");
+     .      .  150:         if(SortedList_delete(t)){
+     .      .  151: 		  fprintf(stderr, "Cannot Delete\n");
+     .      .  152: 		  exit(2);
+     .      .  153: 		};
+     .      .  154:       }
+     .      .  155:       else{
+     .      .  156:         fprintf(stderr, "Invalid deletion, no such element, %d", i);
+     .      .  157:         exit(2);
+     .      .  158:       }
+     .      .  159:       break;
+     .      .  160:     case 'm':
+     .      .  161:       if (clock_gettime(CLOCK_MONOTONIC, &start) == -1){
+     .      .  162:         fprintf(stderr, "ERROR: Cannot acquire clock time. \n");
+     .      .  163:         exit(1);
+     .      .  164:       }
+     .      .  165:       pthread_mutex_lock(&mutex_arr[index]);
+     .      .  166:       if (clock_gettime(CLOCK_MONOTONIC, &end) == -1){
+     .      .  167:         fprintf(stderr, "ERROR: Cannot acquired clock time. \n");
+     .      .  168:         exit(1);
+     .      .  169:       }
+     .      .  170:       timeSums[(*(int *) threadId)] += (end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec);
+     .      .  171: 	  t = SortedList_lookup(&lists[index], elements[i].key);
+     .      .  172:       if(t){
+     .      .  173:         SortedList_delete(t);
+     .      .  174:       }
+     .      .  175:       else{
+     .      .  176:         fprintf(stderr, "Invalid deletion, no such element, %d", i);
+     .      .  177:         exit(2);
+     .      .  178:       }
+     .      .  179:       pthread_mutex_unlock(&mutex_arr[index]);
+     .      .  180:       break;
+     .      .  181:     case 's':
+     .      .  182: 	  if (clock_gettime(CLOCK_MONOTONIC, &start) == -1){
+     .      .  183:         fprintf(stderr, "ERROR: Cannot acquire clock time. \n");
+     .      .  184:         exit(1);
+     .      .  185:       }
+   484    484  186: 	  while (__sync_lock_test_and_set(&spin_flags[index], 1));
+     .      1  187: 	  if (clock_gettime(CLOCK_MONOTONIC, &end) == -1){
+     .      .  188:         fprintf(stderr, "ERROR: Cannot acquired clock time. \n");
+     .      .  189:         exit(1);
+     .      .  190:       }
+     .      .  191:       timeSums[(*(int *) threadId)] += (end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec);
+     .     88  192:       t = SortedList_lookup(&lists[index], elements[i].key);
+     .      .  193:       if(t){
+     .      .  194:         SortedList_delete(t);
+     .      .  195:       }
+     .      .  196:       else{
+     .      .  197:         fprintf(stderr, "Invalid deletion, no such element, %d", i);
+     .      .  198:         exit(2);
+     .      .  199:       }
+     .      .  200:       __sync_lock_release(&spin_flags[index]);
+     .      .  201:       break;
+     .      .  202:     default:
+     .      .  203:       fprintf(stderr, "ERROR: Invalid Lock. \n");
+     .      .  204:       exit(1);
+     .      .  205:     }
+     .      .  206:   }
+     .      .  207:   return NULL;
+     .      .  208: }
+---
+     .      .  209: 
+     .      .  210: void signal_handler(){
+     .      .  211:   fprintf(stderr, "SIGNAL SEGFAULT\n");
+     .      .  212:   exit(1);
+     .      .  213: }
+ROUTINE ====================== list_update in /u/cs/ugrad/zhangk/111/lab2b/lab2_list.c
+   997   1177 Total samples (flat / cumulative)
+     .      .   82: 	lists[i].key = NULL; //circular                                                                                                                                                                                                       
+     .      .   83: 	//creates and initializes (with random keys) the required number (threads x iterations) of list elements     
+     .      .   84:   }
+     .      .   85: }
+     .      .   86: 
+---
+     .      .   87: void * list_update(void * threadId){
+     .      .   88: 
+     .      .   89:   int i;
+     .      .   90:   
+     .      .   91:   struct timespec start;
+     .      .   92:   struct timespec end;
+     .      .   93:   //  printf("%d %d", numThreads, numIterations);
+     .      .   94: 
+     .      .   95:   //printf("I'm executing list update\n");
+     .      .   96:   //threadId must be void * to fulfill pthread argument requirements
+     .      .   97:   for (i = (*(int *) threadId); i < numThreads*numIterations; i += numThreads){
+     .      .   98: 	int index = hash(elements[i].key);
+     .      .   99:     switch (lock){
+     .      .  100:     case 'n':
+     .      .  101:       SortedList_insert(&lists[index], &elements[i]);
+     .      .  102:       break;
+     .      .  103:     case 'm':
+     .      .  104: 	  if (clock_gettime(CLOCK_MONOTONIC, &start) == -1){
+     .      .  105: 		fprintf(stderr, "ERROR: Cannot acquire clock time. \n");
+     .      .  106: 		exit(1);
+     .      .  107: 	  }
+     .      .  108:       pthread_mutex_lock(&mutex_arr[index]);
+     .      .  109:       if (clock_gettime(CLOCK_MONOTONIC, &end) == -1){
+     .      .  110: 		fprintf(stderr, "ERROR: Cannot acquired clock time. \n");
+     .      .  111: 		exit(1);
+     .      .  112: 	  }
+     .      .  113: 	  timeSums[(*(int *) threadId)] += (end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec);
+     .      .  114: 	  SortedList_insert(&lists[index], &elements[i]);
+     .      .  115:       pthread_mutex_unlock(&mutex_arr[index]);
+     .      .  116:       break;
+     .      .  117:     case 's':
+     .      .  118:       if (clock_gettime(CLOCK_MONOTONIC, &start) == -1){
+     .      .  119:         fprintf(stderr, "ERROR: Cannot acquire clock time. \n");
+     .      .  120:         exit(1);
+     .      .  121:       }
+   513    513  122:       while (__sync_lock_test_and_set(&spin_flags[index], 1));
+     .      .  123: 	  if (clock_gettime(CLOCK_MONOTONIC, &end) == -1){
+     .      .  124:         fprintf(stderr, "ERROR: Cannot acquired clock time. \n");
+     .      .  125:         exit(1);
+     .      .  126:       }
+     .      .  127:       timeSums[(*(int *) threadId)] += (end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec);
+     .     91  128: 	  SortedList_insert(&lists[index], &elements[i]);
+     .      .  129:       __sync_lock_release(&spin_flags[index]);
+     .      .  130:       break;
+     .      .  131:     default:
+     .      .  132:       fprintf(stderr, "ERROR: Invalid Lock. \n");
+     .      .  133:       exit(1);
+     .      .  134:     }
+     .      .  135:   }
+     .      .  136:   /*  
+     .      .  137:   SortedListElement_t * node = linked_list->next;
+     .      .  138:   while(node != linked_list){
+     .      .  139:     printf("%s\n", node->key);
+     .      .  140:     node =node->next;
+     .      .  141:     }*/
+     .      .  142:   SortedListElement_t * t;
+     .      .  143:   for(i = *(int *) threadId; i < numThreads*numIterations; i+=numThreads){
+     .      .  144:     int index = hash(elements[i].key);
+     .      .  145:     switch (lock){
+     .      .  146:     case 'n':
+     .      .  147:       t = SortedList_lookup(&lists[index], elements[i].key);
+     .      .  148:       if(t){
+     .      .  149: 		//	printf("i'm deleting\n");
+     .      .  150:         if(SortedList_delete(t)){
+     .      .  151: 		  fprintf(stderr, "Cannot Delete\n");
+     .      .  152: 		  exit(2);
+     .      .  153: 		};
+     .      .  154:       }
+     .      .  155:       else{
+     .      .  156:         fprintf(stderr, "Invalid deletion, no such element, %d", i);
+     .      .  157:         exit(2);
+     .      .  158:       }
+     .      .  159:       break;
+     .      .  160:     case 'm':
+     .      .  161:       if (clock_gettime(CLOCK_MONOTONIC, &start) == -1){
+     .      .  162:         fprintf(stderr, "ERROR: Cannot acquire clock time. \n");
+     .      .  163:         exit(1);
+     .      .  164:       }
+     .      .  165:       pthread_mutex_lock(&mutex_arr[index]);
+     .      .  166:       if (clock_gettime(CLOCK_MONOTONIC, &end) == -1){
+     .      .  167:         fprintf(stderr, "ERROR: Cannot acquired clock time. \n");
+     .      .  168:         exit(1);
+     .      .  169:       }
+     .      .  170:       timeSums[(*(int *) threadId)] += (end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec);
+     .      .  171: 	  t = SortedList_lookup(&lists[index], elements[i].key);
+     .      .  172:       if(t){
+     .      .  173:         SortedList_delete(t);
+     .      .  174:       }
+     .      .  175:       else{
+     .      .  176:         fprintf(stderr, "Invalid deletion, no such element, %d", i);
+     .      .  177:         exit(2);
+     .      .  178:       }
+     .      .  179:       pthread_mutex_unlock(&mutex_arr[index]);
+     .      .  180:       break;
+     .      .  181:     case 's':
+     .      .  182: 	  if (clock_gettime(CLOCK_MONOTONIC, &start) == -1){
+     .      .  183:         fprintf(stderr, "ERROR: Cannot acquire clock time. \n");
+     .      .  184:         exit(1);
+     .      .  185:       }
+   484    484  186: 	  while (__sync_lock_test_and_set(&spin_flags[index], 1));
+     .      1  187: 	  if (clock_gettime(CLOCK_MONOTONIC, &end) == -1){
+     .      .  188:         fprintf(stderr, "ERROR: Cannot acquired clock time. \n");
+     .      .  189:         exit(1);
+     .      .  190:       }
+     .      .  191:       timeSums[(*(int *) threadId)] += (end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec);
+     .     88  192:       t = SortedList_lookup(&lists[index], elements[i].key);
+     .      .  193:       if(t){
+     .      .  194:         SortedList_delete(t);
+     .      .  195:       }
+     .      .  196:       else{
+     .      .  197:         fprintf(stderr, "Invalid deletion, no such element, %d", i);
+     .      .  198:         exit(2);
+     .      .  199:       }
+     .      .  200:       __sync_lock_release(&spin_flags[index]);
+     .      .  201:       break;
+     .      .  202:     default:
+     .      .  203:       fprintf(stderr, "ERROR: Invalid Lock. \n");
+     .      .  204:       exit(1);
+     .      .  205:     }
+     .      .  206:   }
+     .      .  207:   return NULL;
+     .      .  208: }
+---
+     .      .  209: 
+     .      .  210: void signal_handler(){
+     .      .  211:   fprintf(stderr, "SIGNAL SEGFAULT\n");
+     .      .  212:   exit(1);
+     .      .  213: }

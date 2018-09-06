@@ -1,0 +1,14 @@
+NAME: Kevin Zhang, Jack Li
+EMAIL: kevin.zhang.13499@gmail.com, jackli2014@gmail.com
+ID: 104939334, 604754714
+SLIPDAYS: 0
+
+README: contains all of the information in this file
+Makefile: make contains dist, default, clean, dist
+lab3a.c: C source code for program to print out output on the file system image by displaying info on superblocks, groups, free blocks, free inodes, complete inodes, directory and indirect block references.
+
+References:
+http://cs.smith.edu/~nhowe/262/oldlabs/ext2.html
+http://www.nongnu.org/ext2-doc/ext2.html
+http://man7.org/linux/man-pages/man8/debugfs.8.html
+

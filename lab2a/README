@@ -1,0 +1,89 @@
+NAME: Kevin Zhang
+EMAIL: kevin.zhang.13499@gmail.com
+ID: 104939334
+SLIPDAYS: 0
+
+Files:
+lab2_add.c: Source file that performs the operation of adding and subtracting to a variable using pthreading to distribute the work. Uses 
+mutex, spin-locking, and compare and swap to ensure synchronization.
+lab2_list.c: Source file that performs the operation of inserting and deleting from a Sorted linked list. 
+SortedList.h: header file with implementation of SortedList
+SortedList.c: source code for SortedList containing insert, delete, lookup, and length
+Makefile: make file with build, dist, clean, tests, and graphs
+lab2_add.csv
+lab2_list.csv: CSV files with all of the generated data from lab2_list.csv and lab2_add.csv
+lab2_add-1.png: threads and iterations required to generate a failure (with and without yields)
+lab2_add-2.png: average time per operation with and without yields.
+lab2_add-3.png: average time per (single threaded) operation vs. the number of iterations.
+lab2_add-4.png: threads and iterations that can run successfully with yields under each of the synchronization options.
+lab2_add-5.png: average time per (protected) operation vs. the number of threads.
+lab2_list-1.png: average time per (single threaded) unprotected operation vs. number of iterations
+lab2_list-2.png: threads and iterations required to generate a failure (with and without yields).
+lab2_list-3.png: iterations that can run (protected) without failure.
+lab2_list-4.png: cost per operation vs the number of threads for the various synchronization options
+
+README: file explaining this tarball
+
+
+References:
+http://man7.org/linux/man-pages/man7/pthreads.7.html
+https://www.cs.cmu.edu/~adamchik/15-121/lectures/Linked%20Lists/linked%20lists.html
+
+Questions
+2.1.1
+Why does it take many iterations before errors are seen?
+As the number of iterations increase, there is a larger chance for the race condition to occur. The higher the number of threads/iterations, the larger the chances of race conditions and collisions increase with directly increases the number of errors.
+
+Why does a significantly smaller number of iterations so seldom fail?
+As aforementioned, the higher the number of iterations, the more the threads execute the critical section which can possible result in a race condition. This is also true in the other direction. Fewer iterations means less executions of the critical section so the overall chances that a failure occurs decreases.
+
+2.1.2
+Why are the --yield runs so much slower?
+Yield runs are slower because it forces certain threads to yield to the CPU for another thread. Specifically, yielding for another thread results in a context switch which is composed of saving the state, loading the next thread, updating the thread queue and other assorted functionalities that the OS must perform. This results in much more overhead time, causing the program to run much slower.
+Where is the additional time going?
+The additional time is going into context switching. This is composed of saving the state of the thread, loading the new information from a new thread including its program counter and local/global variables, and updates to the thread priority list.
+
+Is it possible to get valid per-operation timings if we are using the --yield option?
+No since we do not know the exact times it takes to make a context switch. Furthermore, the number of context switches may vary and since both the number of context switches and the actual time each context switch takes varies, we cannot produce a exact per-operation timing.
+
+2.1.3
+
+Why does the average cost per operation drop with increasing iterations?
+This has the same explanation as the notion in economics known as fixed costs. There are certain overheads that come with thread creation that are initially large relative to the time it takes to complete the instructions since fewer instructions are being run. However, as the number of iterations grow, this overhead cost becomes amortized over a large number of iteration runs so the overhead is less of a significant factor in the average computation, hence lowering the overall average.
+
+If the cost per iteration is a function of the number of iterations, how do we know how many iterations to run (or what the "correct" cost is)?
+
+The correct cost would best be obtained by running as many iterations as possible. Although implausible, the best “correct” cost would be obtained by running an infinite number of iterations. The correct cost would be the asymptote of a decreasing function.
+
+2.1.4
+
+Why do all of the options perform similarly for low numbers of threads?
+Because there is less critical section accesses at the same time, as shown in previous answers, there is less for the locks to actually do. Therefore the overhead is relatively equal. 
+Why do the three protected operations slow down as the number of threads rises?
+As the number of threads rise, the number of accesses to critical section content also rises. This means that the efficiency of the critical section code determines the overhead differences between the different types of protected operations. The more operations to handle, the larger the gap between them , increasing the relative gap and overall overhead.
+
+QUESTION 2.2.1 - scalability of Mutex
+Compare the variation in time per mutex-protected operation vs the number of threads in Part-1 (adds) and Part-2 (sorted lists)
+Comment on the general shapes of the curves, and explain why they have this shape.
+Comment on the relative rates of increase and differences in the shapes of the curves, and offer an explanation for these differences.
+Both graphs increase the time per mutex-protected operation as the number of threads increase. This increase is linear for both since, as
+mentioned before the collisions increase proportionally to the number of threads. However, the increase of Part-1 is slower than Part-2 since
+linked list manipulation is a much more instruction-heavy operation. This added complexity adds many more possible collisions and this 
+overhead is shown in the higher costs. More time is spent not only waiting for another operation to finish but also more context switches 
+happen because of the added complexity. 
+
+QUESTION 2.2.2 - scalability of spin locks
+
+Compare the variation in time per protected operation vs the number of threads for list operations protected by Mutex vs Spin locks. Comment on the general shapes of the curves, and explain why they have this shape.
+Comment on the relative rates of increase and differences in the shapes of the curves, and offer an explanation for these differences.
+
+Across the board, spin-locks tend to be much less efficient than mutexes when it comes to time per protected operation. This is because
+spin locks waste many many CPU cycles and this increases drastically as the number of threads increase. Mutexes however, block threads that 
+do not have the mutex required to execute code. Both increase linearly with the number of threads and both have a relatively similar starting
+since the number of threads is low, the number of collisions(simultaneous accesses to the critical section) decreases as shown in part one. 
+Therefore, threads do not need to spin for a significant number of cycles so the average time per operation is relatively similar. However, 
+as the number of threads grows, the number of collisions increase and at any given time, there might be many more threads waiting for a 
+singular execution. This vastly increases the performance costs of spin locks since all of these threads are using up CPU cycles whilst 
+the mutex implementation only has these threads sleeping. Both of the protected operations have linear increases, since the number of 
+collisions is proportional to the number of threads. As the threads increase, so does the number of collisions and hence so does the overhead
+of context switching. 
